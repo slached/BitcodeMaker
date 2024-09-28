@@ -243,7 +243,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         StringBuilder log = new StringBuilder();
         ArrayList<String> invalidNumbers = new ArrayList<>();
         String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
-                + "bncodelog.txt";
+                + "bn_code_log.txt";
         try {
             File myObj = new File(filePath); // Specify the filename
             myObj.createNewFile();
@@ -367,7 +367,7 @@ public class Frame extends WindowAdapter implements ActionListener {
 
     void updateHistoryData() {
         String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
-                + "bncodelog.txt";
+                + "bn_code_log.txt";
         ArrayList<History> wholeData = new ArrayList<>();
 
         try {
@@ -375,9 +375,6 @@ public class Frame extends WindowAdapter implements ActionListener {
             historyPanel.removeAll();
             historyPanel.revalidate();
             historyPanel.repaint();
-
-            // this adds guide row to end user
-            addTopRowToHistoryPanel();
 
             File myObj = new File(filePath); // Specify the filename
             myObj.createNewFile();
@@ -389,6 +386,13 @@ public class Frame extends WindowAdapter implements ActionListener {
                 String separatedData[] = nl.split(";");
                 wholeData.add(new History(Integer.toString(Integer.parseInt(separatedData[1].substring(0, maxByte), 2)),
                         separatedData[2], separatedData[1].substring(maxByte).length(), separatedData[0]));
+            }
+
+            if (!wholeData.isEmpty()) {
+                // this adds guide row to end user
+                addTopRowToHistoryPanel(false);
+            } else {
+                addTopRowToHistoryPanel(true);
             }
             Collections.sort(wholeData, Comparator.comparing(History::getDate));
 
@@ -405,7 +409,7 @@ public class Frame extends WindowAdapter implements ActionListener {
                 deleteButton.setBackground(Color.RED);
 
                 deleteButton.addActionListener(new CustomActionListener(wholeData.get(i).getUUID(), this.secondFrame,
-                        this.historyPanel,this.gbc,this.maxByte,this.deleteButton));
+                        this.historyPanel, this.gbc, this.maxByte, this.deleteButton));
 
                 String decimalNumber = wholeData.get(i).getNumber();
                 String date = wholeData.get(i).getDate();
@@ -442,21 +446,28 @@ public class Frame extends WindowAdapter implements ActionListener {
         }
     }
 
-    private void addTopRowToHistoryPanel() {
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        historyPanel.add(new JLabel("Number"), gbc);
+    private void addTopRowToHistoryPanel(boolean isEmpty) {
+        if (isEmpty) {
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            historyPanel.add(new JLabel("There is no any number."), gbc);
+        } else {
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.WEST;
+            historyPanel.add(new JLabel("Number"), gbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        historyPanel.add(new JLabel("Date"), gbc);
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            historyPanel.add(new JLabel("Date"), gbc);
 
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.EAST;
-        historyPanel.add(new JLabel("Triangle Count"), gbc);
+            gbc.gridx = 2;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.EAST;
+            historyPanel.add(new JLabel("Triangle Count"), gbc);
+        }
     }
 
 }

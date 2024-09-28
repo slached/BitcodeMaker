@@ -46,7 +46,7 @@ class CustomActionListener implements ActionListener {
 
             StringBuilder log = new StringBuilder();
             String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
-                    + "bncodelog.txt";
+                    + "bn_code_log.txt";
             try {
 
                 File myObj = new File(filePath); // Specify the filename
@@ -77,7 +77,7 @@ class CustomActionListener implements ActionListener {
 
     void updateHistoryData() {
         String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
-                + "bncodelog.txt";
+                + "bn_code_log.txt";
         ArrayList<History> wholeData = new ArrayList<>();
 
         try {
@@ -85,9 +85,6 @@ class CustomActionListener implements ActionListener {
             historyPanel.removeAll();
             historyPanel.revalidate();
             historyPanel.repaint();
-
-            // this adds guide row to end user
-            addTopRowToHistoryPanel();
 
             File myObj = new File(filePath); // Specify the filename
             myObj.createNewFile();
@@ -100,6 +97,14 @@ class CustomActionListener implements ActionListener {
                 wholeData.add(new History(Integer.toString(Integer.parseInt(separatedData[1].substring(0, maxByte), 2)),
                         separatedData[2], separatedData[1].substring(maxByte).length(), separatedData[0]));
             }
+
+            if (!wholeData.isEmpty()) {
+                // this adds guide row to end user
+                addTopRowToHistoryPanel(false);
+            } else {
+                addTopRowToHistoryPanel(true);
+            }
+
             Collections.sort(wholeData, Comparator.comparing(History::getDate));
 
             int gridY = 2;
@@ -152,21 +157,28 @@ class CustomActionListener implements ActionListener {
         }
     }
 
-    private void addTopRowToHistoryPanel() {
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.WEST;
-        historyPanel.add(new JLabel("Number"), gbc);
+    private void addTopRowToHistoryPanel(boolean isEmpty) {
+        if (isEmpty) {
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            historyPanel.add(new JLabel("There is no any number."), gbc);
+        } else {
+            gbc.gridx = 0;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.WEST;
+            historyPanel.add(new JLabel("Number"), gbc);
 
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        historyPanel.add(new JLabel("Date"), gbc);
+            gbc.gridx = 1;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.CENTER;
+            historyPanel.add(new JLabel("Date"), gbc);
 
-        gbc.gridx = 2;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.EAST;
-        historyPanel.add(new JLabel("Triangle Count"), gbc);
+            gbc.gridx = 2;
+            gbc.gridy = 0;
+            gbc.anchor = GridBagConstraints.EAST;
+            historyPanel.add(new JLabel("Triangle Count"), gbc);
+        }
     }
 
 }
