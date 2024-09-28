@@ -1,41 +1,87 @@
 package com.app;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
+import java.awt.Point;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.awt.datatransfer.StringSelection;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Scanner;
+import java.util.UUID;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextField;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 
 public class Frame extends WindowAdapter implements ActionListener {
 
-    private static final Logger log = LogManager.getLogger(Frame.class);
     private final JFrame frame;
+    private final JFrame secondFrame;
+    private final JPanel historyPanel;
     private final JLabel hexadecimalLabel;
     private final JLabel finalLabel;
     private final JLabel error;
     private final JTextField numberInputField;
     private final JTextField triangleQuantityField;
     private final JButton copyButton;
-    private String binary = "000000000000";
+    private final JButton buttonForEnhancedView;
+    private JButton deleteButton;
+    private String binary = "0000000000000";
+    private GridBagConstraints gbc;
+
+    private final int maxByte = 13;
+
+    private boolean[] errors = new boolean[2];
+    private boolean isEnhancedViewActive = true;
 
     Frame() {
 
+        historyPanel = new JPanel();
+        historyPanel.setLayout(new GridBagLayout());
+        gbc = new GridBagConstraints();
+
+        // insert all history into panel 
+        updateHistoryData();
+        JScrollPane scrollPane = new JScrollPane(historyPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        ImageIcon icon = new ImageIcon(Frame.class.getResource("/open_menu.png"));
+        Image resizedIcon = icon.getImage().getScaledInstance(25, 25, Image.SCALE_SMOOTH);
+        ImageIcon lastIcon = new ImageIcon(resizedIcon);
+        buttonForEnhancedView = new JButton("", lastIcon);
+        buttonForEnhancedView.setBounds(255, 145, 30, 30);
+        buttonForEnhancedView.setFocusable(false);
+        buttonForEnhancedView.setBackground(Color.lightGray);
+        buttonForEnhancedView.addActionListener(this);
+        buttonForEnhancedView.setEnabled(!isEnhancedViewActive);
+
         error = new JLabel();
-        error.setBounds(100, 130, 300, 20);
+        error.setBounds(75, 120, 300, 20);
         error.setForeground(Color.RED);
         error.setVisible(true);
 
@@ -49,7 +95,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         writtenBy.setBounds(10, 160, 300, 20);
         writtenBy.setForeground(Color.BLUE);
 
-        finalLabel = new JLabel("000000000000");
+        finalLabel = new JLabel(binary);
         finalLabel.setBounds(10, 65, 300, 20);
         finalLabel.setFont(new Font("BinCode", Font.PLAIN, 12));
 
@@ -62,11 +108,13 @@ public class Frame extends WindowAdapter implements ActionListener {
         triangleQuantityField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
+                onChange();
                 addTheTriangles();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
+                onChange();
                 addTheTriangles();
             }
 
@@ -79,7 +127,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         JLabel numberLabel = new JLabel("Code Number:");
         numberLabel.setBounds(10, 10, 90, 20);
 
-        hexadecimalLabel = new JLabel("");
+        hexadecimalLabel = new JLabel();
         hexadecimalLabel.setBounds(260, 10, 50, 20);
 
         numberInputField = new JTextField();
@@ -89,11 +137,13 @@ public class Frame extends WindowAdapter implements ActionListener {
             @Override
             public void insertUpdate(DocumentEvent e) {
                 onChange();
+                addTheTriangles();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
                 onChange();
+                addTheTriangles();
             }
 
             @Override
@@ -117,6 +167,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         mainPanel.add(writtenBy);
         mainPanel.add(copyButton);
         mainPanel.add(error);
+        mainPanel.add(buttonForEnhancedView);
 
         frame = new JFrame("Bincode Maker");
         frame.setLocationRelativeTo(null);
@@ -124,21 +175,54 @@ public class Frame extends WindowAdapter implements ActionListener {
         frame.setSize(width, height);
         frame.setResizable(false);
         frame.setVisible(true);
-        frame.addWindowListener(this);
         frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         frame.add(mainPanel);
+
+        Point frameLocation = frame.getLocation();
+        Dimension frameSize = frame.getSize();
+
+        secondFrame = new JFrame("History");
+        secondFrame.setLocation(frameLocation.x + frameSize.width - 10, frameLocation.y);
+        secondFrame.setLayout(new BorderLayout());
+        secondFrame.setSize(340, height);
+        secondFrame.setResizable(true);
+        secondFrame.setVisible(true);
+        secondFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        secondFrame.add(scrollPane, BorderLayout.CENTER);
+        frame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                if (JOptionPane.showConfirmDialog(frame,
+                        "Are you sure?") == JOptionPane.YES_OPTION) {
+                    frame.dispose();
+                    secondFrame.dispose();
+                }
+            }
+        });
+
+        secondFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                isEnhancedViewActive = false;
+                buttonForEnhancedView.setEnabled(!isEnhancedViewActive);
+                secondFrame.setVisible(isEnhancedViewActive);
+            }
+        });
+
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == copyButton) {
-
-
             if (isValid()) {
-                String myString = finalLabel.getText();
-                StringSelection stringSelection = new StringSelection(myString);
+                StringSelection stringSelection = new StringSelection(finalLabel.getText());
                 Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                 clipboard.setContents(stringSelection, null);
+                // trigger updateHistory function after new number added
+                updateHistoryData();
+                historyPanel.revalidate();
+                historyPanel.repaint();
+
                 error.setForeground(Color.green);
                 error.setText("Sayı kopyalandı.");
 
@@ -147,36 +231,49 @@ public class Frame extends WindowAdapter implements ActionListener {
                 error.setText("Bu sayı zaten kullanılmış.");
             }
         }
-
+        if (e.getSource() == buttonForEnhancedView) {
+            isEnhancedViewActive = true;
+            buttonForEnhancedView.setEnabled(!isEnhancedViewActive);
+            secondFrame.setVisible(isEnhancedViewActive);
+            updateHistoryData();
+        }
     }
 
     boolean isValid() {
         StringBuilder log = new StringBuilder();
         ArrayList<String> invalidNumbers = new ArrayList<>();
-        String currentDir = System.getProperty("user.dir");
-        String path = currentDir + "/log.txt";
-
+        String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
+                + "bncodelog.txt";
         try {
-            File myObj = new File(path); // Specify the filename
+            File myObj = new File(filePath); // Specify the filename
             myObj.createNewFile();
 
             //read just before add new element
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String nl = myReader.nextLine();
-                invalidNumbers.add(nl);
+                // in log format i decide to use separate number and date's with x so 0. index present UUID
+                // 1. index presents number
+                // and 2. index presents the date 
+                invalidNumbers.add(nl.split(";")[1]);
                 log.append(nl).append("\n");
             }
             myReader.close();
 
             // add new element if element don't exists.
-            FileWriter myWriter = new FileWriter(path);
+            FileWriter myWriter = new FileWriter(filePath);
             if (invalidNumbers.contains(finalLabel.getText())) {
                 //write current log file
                 myWriter.write(log.toString());
                 myWriter.close();
             }
-            myWriter.write(log.append(finalLabel.getText()).toString());
+            // get now
+            ZonedDateTime zonedDateTime = ZonedDateTime.now();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            String formattedZonedTime = zonedDateTime.format(formatter);
+
+            myWriter.write(log.append(UUID.randomUUID().toString())
+                    .append(";").append(finalLabel.getText()).append(";").append(formattedZonedTime).toString());
             myWriter.close();
 
             return true;
@@ -185,51 +282,181 @@ public class Frame extends WindowAdapter implements ActionListener {
         }
     }
 
-    public void windowClosing(WindowEvent e) {
-        if (JOptionPane.showConfirmDialog(frame, "Are you sure?") == JOptionPane.YES_OPTION)
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    void onChange() {
+        if (!numberInputField.getText().isEmpty()) {
+            try {
+                //hex
+                String hexString = Integer.toHexString(Integer.parseInt(numberInputField.getText())).toUpperCase();
+                if (hexString.length() == 1) {
+                    hexString = "00" + hexString.toUpperCase();
+                } else if (hexString.length() == 2) {
+                    hexString = "0" + hexString.toUpperCase();
+                }
+                hexadecimalLabel.setText(hexString);
+
+                //binary
+                StringBuilder binaryString = new StringBuilder(
+                        Integer.toBinaryString(Integer.parseInt(numberInputField.getText())));
+                int threshold = binaryString.length();
+                int bitQuantity = maxByte;
+                while (threshold < bitQuantity) {
+                    binaryString.insert(0, "0");
+                    threshold++;
+                }
+                if (binaryString.length() > bitQuantity) {
+                    throw new Exception("Girdiğiniz sayı üst sınırı aşıyor!");
+                }
+                finalLabel.setText(binaryString.toString());
+                binary = binaryString.toString();
+                errors[0] = false;
+            } catch (Exception e) {
+                errors[0] = true;
+                copyButton.setEnabled(false);
+                error.setForeground(Color.RED);
+                error.setText(e.getMessage());
+                resetValues();
+            }
+        } else {
+            errors[0] = false;
+            resetValues();
+        }
+        //if there is no any error
+        if (!errors[0] && !errors[1]) {
+            error.setText("");
+            copyButton.setEnabled(true);
+        }
     }
 
-
-    void onChange() {
-        try {
-            //hex
-            String hexString = Integer.toHexString(Integer.parseInt(numberInputField.getText())).toUpperCase();
-            if (hexString.length() == 1) hexString = "00" + hexString.toUpperCase();
-            else if (hexString.length() == 2) hexString = "0" + hexString.toUpperCase();
-            hexadecimalLabel.setText(hexString);
-
-            //binary
-            StringBuilder binaryString = new StringBuilder(Integer.toBinaryString(Integer.parseInt(numberInputField.getText())));
-            int threshold = binaryString.length();
-            while (threshold < 12) {
-                binaryString.insert(0, "0");
-                threshold++;
-            }
-            if (binaryString.length() > 12) throw new Exception();
-            finalLabel.setText(binaryString.toString());
-            binary = binaryString.toString();
-
-        } catch (Exception ignored) {
-            hexadecimalLabel.setText("");
-            finalLabel.setText("000000000000");
-            binary = "000000000000";
-        }
-
-        addTheTriangles();
+    void resetValues() {
+        hexadecimalLabel.setText("");
+        finalLabel.setText("0000000000000");
+        binary = "0000000000000";
     }
 
     void addTheTriangles() {
-        try {
-            int quantityOfA = Integer.parseInt(triangleQuantityField.getText());
-            StringBuilder A = new StringBuilder();
-            while (quantityOfA > 0 && quantityOfA < 5) {
-                A.append("A");
-                quantityOfA--;
+        if (!triangleQuantityField.getText().isEmpty()) {
+            try {
+                int quantityOfA = Integer.parseInt(triangleQuantityField.getText());
+                StringBuilder A = new StringBuilder();
+                if (quantityOfA >= 5) {
+                    throw new Exception("4 ten fazla rakam giremezsiniz!");
+                }
+                while (quantityOfA > 0 && quantityOfA < 5) {
+                    A.append("A");
+                    quantityOfA--;
+                }
+                finalLabel.setText(binary + A);
+                errors[1] = false;
+            } catch (Exception e) {
+                error.setForeground(Color.RED);
+                error.setText(e.getMessage());
+                copyButton.setEnabled(false);
+                errors[1] = true;
+                resetValues();
             }
-            finalLabel.setText(binary + A);
-        } catch (Exception ignore) {
-            finalLabel.setText(binary);
+        } else {
+            errors[1] = false;
+        }
+
+        //if there is no any error
+        if (!errors[0] && !errors[1]) {
+            error.setText("");
+            copyButton.setEnabled(true);
         }
     }
+
+    void updateHistoryData() {
+        String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
+                + "bncodelog.txt";
+        ArrayList<History> wholeData = new ArrayList<>();
+
+        try {
+            //delete all item inside history and revalidate
+            historyPanel.removeAll();
+            historyPanel.revalidate();
+            historyPanel.repaint();
+
+            // this adds guide row to end user
+            addTopRowToHistoryPanel();
+
+            File myObj = new File(filePath); // Specify the filename
+            myObj.createNewFile();
+
+            //read just before add new element
+            Scanner myReader = new Scanner(myObj);
+            while (myReader.hasNextLine()) {
+                String nl = myReader.nextLine();
+                String separatedData[] = nl.split(";");
+                wholeData.add(new History(Integer.toString(Integer.parseInt(separatedData[1].substring(0, maxByte), 2)),
+                        separatedData[2], separatedData[1].substring(maxByte).length(), separatedData[0]));
+            }
+            Collections.sort(wholeData, Comparator.comparing(History::getDate));
+
+            int gridY = 2;
+
+            ImageIcon icon = new ImageIcon(Frame.class.getResource("/delete_item.png"));
+            Image resizedIcon = icon.getImage().getScaledInstance(15, 15, Image.SCALE_SMOOTH);
+            ImageIcon lastIcon = new ImageIcon(resizedIcon);
+
+            // reverse and render at history panel
+            for (int i = wholeData.size() - 1; i >= 0; i--) {
+                deleteButton = new JButton("", lastIcon);
+                deleteButton.setFocusable(false);
+                deleteButton.setBackground(Color.RED);
+
+                deleteButton.addActionListener(new CustomActionListener(wholeData.get(i).getUUID(), this.secondFrame,
+                        this.historyPanel,this.gbc,this.maxByte,this.deleteButton));
+
+                String decimalNumber = wholeData.get(i).getNumber();
+                String date = wholeData.get(i).getDate();
+                String triangleCount = Integer.toString(wholeData.get(i).getTriangleCount());
+
+                gbc.gridx = 0;
+                gbc.gridy = gridY;
+                gbc.anchor = GridBagConstraints.WEST;
+                gbc.insets = new Insets(0, 0, 10, 0);
+                historyPanel.add(new JLabel(decimalNumber), gbc);
+
+                gbc.gridx = 1;
+                gbc.anchor = GridBagConstraints.CENTER;
+                gbc.insets = new Insets(0, 0, 10, 0);
+                historyPanel.add(new JLabel(date), gbc);
+
+                gbc.gridx = 2;
+                gbc.anchor = GridBagConstraints.EAST;
+                gbc.insets = new Insets(0, 0, 10, 50);
+                historyPanel.add(new JLabel(triangleCount), gbc);
+
+                gbc.gridx = 3;
+                gbc.insets = new Insets(0, 0, 10, 0);
+                historyPanel.add(deleteButton, gbc);
+
+                gridY++;
+                historyPanel.revalidate();
+                historyPanel.repaint();
+            }
+
+            myReader.close();
+
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void addTopRowToHistoryPanel() {
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.WEST;
+        historyPanel.add(new JLabel("Number"), gbc);
+
+        gbc.gridx = 1;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.CENTER;
+        historyPanel.add(new JLabel("Date"), gbc);
+
+        gbc.gridx = 2;
+        gbc.gridy = 0;
+        gbc.anchor = GridBagConstraints.EAST;
+        historyPanel.add(new JLabel("Triangle Count"), gbc);
+    }
+
 }
