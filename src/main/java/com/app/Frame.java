@@ -51,12 +51,13 @@ public class Frame extends WindowAdapter implements ActionListener {
     private final JButton copyButton;
     private final JButton buttonForEnhancedView;
     private JButton deleteButton;
-    private String binary = "0000000000000";
-    private GridBagConstraints gbc;
+    private final String resetBinary = "00000000000000000000";
+    private String binary = "00000000000000000000";
+    private final GridBagConstraints gbc;
 
-    private final int maxByte = 13;
+    private final int maxByte = 20;
 
-    private boolean[] errors = new boolean[2];
+    private final boolean[] errors = new boolean[2];
     private boolean isEnhancedViewActive = true;
 
     Frame() {
@@ -151,7 +152,7 @@ public class Frame extends WindowAdapter implements ActionListener {
             }
         });
 
-        int width = 310;
+        int width = 330;
         int height = 220;
 
         JPanel mainPanel = new JPanel();
@@ -182,7 +183,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         Dimension frameSize = frame.getSize();
 
         secondFrame = new JFrame("History");
-        secondFrame.setLocation(frameLocation.x + frameSize.width - 10, frameLocation.y);
+        secondFrame.setLocation(frameLocation.x + frameSize.width - 5, frameLocation.y);
         secondFrame.setLayout(new BorderLayout());
         secondFrame.setSize(340, height);
         secondFrame.setResizable(true);
@@ -329,8 +330,8 @@ public class Frame extends WindowAdapter implements ActionListener {
 
     void resetValues() {
         hexadecimalLabel.setText("");
-        finalLabel.setText("0000000000000");
-        binary = "0000000000000";
+        finalLabel.setText(resetBinary);
+        binary = resetBinary;
     }
 
     void addTheTriangles() {
@@ -418,7 +419,7 @@ public class Frame extends WindowAdapter implements ActionListener {
                 gbc.gridx = 0;
                 gbc.gridy = gridY;
                 gbc.anchor = GridBagConstraints.WEST;
-                gbc.insets = new Insets(0, 0, 10, 0);
+                gbc.insets = new Insets(0, 0, 10, 10);
                 historyPanel.add(new JLabel(decimalNumber), gbc);
 
                 gbc.gridx = 1;
@@ -428,7 +429,7 @@ public class Frame extends WindowAdapter implements ActionListener {
 
                 gbc.gridx = 2;
                 gbc.anchor = GridBagConstraints.EAST;
-                gbc.insets = new Insets(0, 0, 10, 50);
+                gbc.insets = new Insets(0, 35, 10, 35);
                 historyPanel.add(new JLabel(triangleCount), gbc);
 
                 gbc.gridx = 3;

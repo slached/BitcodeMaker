@@ -129,7 +129,7 @@ class CustomActionListener implements ActionListener {
                 gbc.gridx = 0;
                 gbc.gridy = gridY;
                 gbc.anchor = GridBagConstraints.WEST;
-                gbc.insets = new Insets(0, 0, 10, 0);
+                gbc.insets = new Insets(0, 0, 10, 10);
                 historyPanel.add(new JLabel(decimalNumber), gbc);
 
                 gbc.gridx = 1;
@@ -139,7 +139,7 @@ class CustomActionListener implements ActionListener {
 
                 gbc.gridx = 2;
                 gbc.anchor = GridBagConstraints.EAST;
-                gbc.insets = new Insets(0, 0, 10, 50);
+                gbc.insets = new Insets(0, 35, 10, 35);
                 historyPanel.add(new JLabel(triangleCount), gbc);
 
                 gbc.gridx = 3;
