@@ -47,7 +47,7 @@ public class Frame extends WindowAdapter implements ActionListener {
     private final JLabel finalLabel;
     private final JLabel error;
     private final JTextField numberInputField;
-    private final JTextField triangleQuantityField;
+    // private final JTextField triangleQuantityField;
     private final JButton copyButton;
     private final JButton buttonForEnhancedView;
     private JButton deleteButton;
@@ -56,7 +56,6 @@ public class Frame extends WindowAdapter implements ActionListener {
     private final GridBagConstraints gbc;
 
     private final int maxByte = 20;
-
     private final boolean[] errors = new boolean[2];
     private boolean isEnhancedViewActive = true;
 
@@ -66,7 +65,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         historyPanel.setLayout(new GridBagLayout());
         gbc = new GridBagConstraints();
 
-        // insert all history into panel 
+        // insert all history into panel
         updateHistoryData();
         JScrollPane scrollPane = new JScrollPane(historyPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -99,31 +98,35 @@ public class Frame extends WindowAdapter implements ActionListener {
         finalLabel = new JLabel(binary);
         finalLabel.setBounds(10, 65, 300, 20);
         finalLabel.setFont(new Font("BinCode", Font.PLAIN, 12));
-
-        JLabel triangleLabel = new JLabel("Add triangles:");
-        triangleLabel.setBounds(10, 35, 90, 20);
-
-        triangleQuantityField = new JTextField();
-        triangleQuantityField.setBounds(160, 35, 90, 20);
-        //change listener
-        triangleQuantityField.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                onChange();
-                addTheTriangles();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                onChange();
-                addTheTriangles();
-            }
-
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-
-            }
-        });
+        /*
+         * Triangle function disabled
+         * JLabel triangleLabel = new JLabel("Add triangles:");
+         * triangleLabel.setBounds(10, 35, 90, 20);
+         * 
+         * triangleQuantityField = new JTextField();
+         * triangleQuantityField.setBounds(160, 35, 90, 20);
+         * // change listener
+         * triangleQuantityField.getDocument().addDocumentListener(new
+         * DocumentListener() {
+         * 
+         * @Override
+         * public void insertUpdate(DocumentEvent e) {
+         * onChange();
+         * addTheTriangles();
+         * }
+         * 
+         * @Override
+         * public void removeUpdate(DocumentEvent e) {
+         * onChange();
+         * addTheTriangles();
+         * }
+         * 
+         * @Override
+         * public void changedUpdate(DocumentEvent e) {
+         * 
+         * }
+         * });
+         */
 
         JLabel numberLabel = new JLabel("Code Number:");
         numberLabel.setBounds(10, 10, 90, 20);
@@ -133,18 +136,18 @@ public class Frame extends WindowAdapter implements ActionListener {
 
         numberInputField = new JTextField();
         numberInputField.setBounds(160, 10, 90, 20);
-        //change listener
+        // change listener
         numberInputField.getDocument().addDocumentListener(new DocumentListener() {
             @Override
             public void insertUpdate(DocumentEvent e) {
                 onChange();
-                addTheTriangles();
+                // addTheTriangles();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
                 onChange();
-                addTheTriangles();
+                // addTheTriangles();
             }
 
             @Override
@@ -162,8 +165,10 @@ public class Frame extends WindowAdapter implements ActionListener {
         mainPanel.add(numberLabel);
         mainPanel.add(numberInputField);
         mainPanel.add(hexadecimalLabel);
-        mainPanel.add(triangleLabel);
-        mainPanel.add(triangleQuantityField);
+        /*
+         * mainPanel.add(triangleLabel);
+         * mainPanel.add(triangleQuantityField);
+         */
         mainPanel.add(finalLabel);
         mainPanel.add(writtenBy);
         mainPanel.add(copyButton);
@@ -249,13 +254,14 @@ public class Frame extends WindowAdapter implements ActionListener {
             File myObj = new File(filePath); // Specify the filename
             myObj.createNewFile();
 
-            //read just before add new element
+            // read just before add new element
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String nl = myReader.nextLine();
-                // in log format i decide to use separate number and date's with x so 0. index present UUID
+                // in log format i decide to use separate number and date's with x so 0. index
+                // present UUID
                 // 1. index presents number
-                // and 2. index presents the date 
+                // and 2. index presents the date
                 invalidNumbers.add(nl.split(";")[1]);
                 log.append(nl).append("\n");
             }
@@ -264,7 +270,7 @@ public class Frame extends WindowAdapter implements ActionListener {
             // add new element if element don't exists.
             FileWriter myWriter = new FileWriter(filePath);
             if (invalidNumbers.contains(finalLabel.getText())) {
-                //write current log file
+                // write current log file
                 myWriter.write(log.toString());
                 myWriter.close();
             }
@@ -286,7 +292,7 @@ public class Frame extends WindowAdapter implements ActionListener {
     void onChange() {
         if (!numberInputField.getText().isEmpty()) {
             try {
-                //hex
+                // hex
                 String hexString = Integer.toHexString(Integer.parseInt(numberInputField.getText())).toUpperCase();
                 if (hexString.length() == 1) {
                     hexString = "00" + hexString.toUpperCase();
@@ -295,7 +301,7 @@ public class Frame extends WindowAdapter implements ActionListener {
                 }
                 hexadecimalLabel.setText(hexString);
 
-                //binary
+                // binary
                 StringBuilder binaryString = new StringBuilder(
                         Integer.toBinaryString(Integer.parseInt(numberInputField.getText())));
                 int threshold = binaryString.length();
@@ -307,8 +313,9 @@ public class Frame extends WindowAdapter implements ActionListener {
                 if (binaryString.length() > bitQuantity) {
                     throw new Exception("Girdiğiniz sayı üst sınırı aşıyor!");
                 }
-                finalLabel.setText(binaryString.toString());
-                binary = binaryString.toString();
+                // 1 A(Triangle) is added to the end of binary string
+                binary = binaryString.toString() + "A";
+                finalLabel.setText(binary);
                 errors[0] = false;
             } catch (Exception e) {
                 errors[0] = true;
@@ -321,7 +328,7 @@ public class Frame extends WindowAdapter implements ActionListener {
             errors[0] = false;
             resetValues();
         }
-        //if there is no any error
+        // if there is no any error
         if (!errors[0] && !errors[1]) {
             error.setText("");
             copyButton.setEnabled(true);
@@ -334,37 +341,41 @@ public class Frame extends WindowAdapter implements ActionListener {
         binary = resetBinary;
     }
 
-    void addTheTriangles() {
-        if (!triangleQuantityField.getText().isEmpty()) {
-            try {
-                int quantityOfA = Integer.parseInt(triangleQuantityField.getText());
-                StringBuilder A = new StringBuilder();
-                if (quantityOfA >= 5) {
-                    throw new Exception("4 ten fazla rakam giremezsiniz!");
-                }
-                while (quantityOfA > 0 && quantityOfA < 5) {
-                    A.append("A");
-                    quantityOfA--;
-                }
-                finalLabel.setText(binary + A);
-                errors[1] = false;
-            } catch (Exception e) {
-                error.setForeground(Color.RED);
-                error.setText(e.getMessage());
-                copyButton.setEnabled(false);
-                errors[1] = true;
-                resetValues();
-            }
-        } else {
-            errors[1] = false;
-        }
-
-        //if there is no any error
-        if (!errors[0] && !errors[1]) {
-            error.setText("");
-            copyButton.setEnabled(true);
-        }
-    }
+    /*
+     * Disabled
+     *
+     * void addTheTriangles() {
+     * if (!triangleQuantityField.getText().isEmpty()) {
+     * try {
+     * int quantityOfA = Integer.parseInt(triangleQuantityField.getText());
+     * StringBuilder A = new StringBuilder();
+     * if (quantityOfA >= 5) {
+     * throw new Exception("4 ten fazla rakam giremezsiniz!");
+     * }
+     * while (quantityOfA > 0 && quantityOfA < 5) {
+     * A.append("A");
+     * quantityOfA--;
+     * }
+     * finalLabel.setText(binary + A);
+     * errors[1] = false;
+     * } catch (Exception e) {
+     * error.setForeground(Color.RED);
+     * error.setText(e.getMessage());
+     * copyButton.setEnabled(false);
+     * errors[1] = true;
+     * resetValues();
+     * }
+     * } else {
+     * errors[1] = false;
+     * }
+     * 
+     * // if there is no any error
+     * if (!errors[0] && !errors[1]) {
+     * error.setText("");
+     * copyButton.setEnabled(true);
+     * }
+     * }
+     */
 
     void updateHistoryData() {
         String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
@@ -372,7 +383,7 @@ public class Frame extends WindowAdapter implements ActionListener {
         ArrayList<History> wholeData = new ArrayList<>();
 
         try {
-            //delete all item inside history and revalidate
+            // delete all item inside history and revalidate
             historyPanel.removeAll();
             historyPanel.revalidate();
             historyPanel.repaint();
@@ -380,7 +391,7 @@ public class Frame extends WindowAdapter implements ActionListener {
             File myObj = new File(filePath); // Specify the filename
             myObj.createNewFile();
 
-            //read just before add new element
+            // read just before add new element
             Scanner myReader = new Scanner(myObj);
             while (myReader.hasNextLine()) {
                 String nl = myReader.nextLine();
@@ -388,7 +399,7 @@ public class Frame extends WindowAdapter implements ActionListener {
                 wholeData.add(new History(Integer.toString(Integer.parseInt(separatedData[1].substring(0, maxByte), 2)),
                         separatedData[2], separatedData[1].substring(maxByte).length(), separatedData[0]));
             }
-
+            myReader.close();
             if (!wholeData.isEmpty()) {
                 // this adds guide row to end user
                 addTopRowToHistoryPanel(false);
@@ -405,12 +416,14 @@ public class Frame extends WindowAdapter implements ActionListener {
 
             // reverse and render at history panel
             for (int i = wholeData.size() - 1; i >= 0; i--) {
+                int index = i;
                 deleteButton = new JButton("", lastIcon);
                 deleteButton.setFocusable(false);
                 deleteButton.setBackground(Color.RED);
 
-                deleteButton.addActionListener(new CustomActionListener(wholeData.get(i).getUUID(), this.secondFrame,
-                        this.historyPanel, this.gbc, this.maxByte, this.deleteButton));
+                deleteButton.addActionListener(e -> {
+                    customActionListener(wholeData.get(index).getUUID(), myObj, filePath);
+                });
 
                 String decimalNumber = wholeData.get(i).getNumber();
                 String date = wholeData.get(i).getDate();
@@ -468,6 +481,31 @@ public class Frame extends WindowAdapter implements ActionListener {
             gbc.gridy = 0;
             gbc.anchor = GridBagConstraints.EAST;
             historyPanel.add(new JLabel("Triangle Count"), gbc);
+        }
+    }
+
+    void customActionListener(String uuidString, File myObj, String filePath) {
+        if (JOptionPane.showConfirmDialog(frame,
+                String.format("Are you really want to delete %s?", uuidString)) == JOptionPane.YES_OPTION) {
+            try {
+                StringBuilder log = new StringBuilder();
+                // re read the file and delete the selected item
+                final Scanner myReader = new Scanner(myObj);
+                while (myReader.hasNextLine()) {
+                    String nl = myReader.nextLine();
+                    String uuidE = nl.split(";")[0];
+                    if (uuidE != null && !uuidE.equals(uuidString)) {
+                        log.append(nl).append("\n");
+                    }
+                    try (FileWriter myWriter = new FileWriter(filePath)) {
+                        myWriter.write(log.toString());
+                    }
+                }
+                myReader.close();
+                // update data after deleting
+                updateHistoryData();
+            } catch (Exception ignored) {
+            }
         }
     }
 
