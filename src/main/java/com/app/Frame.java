@@ -47,7 +47,7 @@ public class Frame extends WindowAdapter implements ActionListener {
     private final JLabel finalLabel;
     private final JLabel error;
     private final JTextField numberInputField;
-    // private final JTextField triangleQuantityField;
+    private final JTextField triangleQuantityField;
     private final JButton copyButton;
     private final JButton buttonForEnhancedView;
     private JButton deleteButton;
@@ -98,35 +98,32 @@ public class Frame extends WindowAdapter implements ActionListener {
         finalLabel = new JLabel(binary);
         finalLabel.setBounds(10, 65, 300, 20);
         finalLabel.setFont(new Font("BinCode", Font.PLAIN, 12));
-        /*
-         * Triangle function disabled
-         * JLabel triangleLabel = new JLabel("Add triangles:");
-         * triangleLabel.setBounds(10, 35, 90, 20);
-         * 
-         * triangleQuantityField = new JTextField();
-         * triangleQuantityField.setBounds(160, 35, 90, 20);
-         * // change listener
-         * triangleQuantityField.getDocument().addDocumentListener(new
-         * DocumentListener() {
-         * 
-         * @Override
-         * public void insertUpdate(DocumentEvent e) {
-         * onChange();
-         * addTheTriangles();
-         * }
-         * 
-         * @Override
-         * public void removeUpdate(DocumentEvent e) {
-         * onChange();
-         * addTheTriangles();
-         * }
-         * 
-         * @Override
-         * public void changedUpdate(DocumentEvent e) {
-         * 
-         * }
-         * });
-         */
+
+        JLabel triangleLabel = new JLabel("Add triangles:");
+        triangleLabel.setBounds(10, 35, 90, 20);
+
+        triangleQuantityField = new JTextField();
+        triangleQuantityField.setBounds(160, 35, 90, 20);
+        // change listener
+        triangleQuantityField.getDocument().addDocumentListener(new DocumentListener() {
+
+            @Override
+            public void insertUpdate(DocumentEvent e) {
+                onChange();
+                addTheTriangles();
+            }
+
+            @Override
+            public void removeUpdate(DocumentEvent e) {
+                onChange();
+                addTheTriangles();
+            }
+
+            @Override
+            public void changedUpdate(DocumentEvent e) {
+
+            }
+        });
 
         JLabel numberLabel = new JLabel("Code Number:");
         numberLabel.setBounds(10, 10, 90, 20);
@@ -141,13 +138,13 @@ public class Frame extends WindowAdapter implements ActionListener {
             @Override
             public void insertUpdate(DocumentEvent e) {
                 onChange();
-                // addTheTriangles();
+                addTheTriangles();
             }
 
             @Override
             public void removeUpdate(DocumentEvent e) {
                 onChange();
-                // addTheTriangles();
+                addTheTriangles();
             }
 
             @Override
@@ -165,10 +162,8 @@ public class Frame extends WindowAdapter implements ActionListener {
         mainPanel.add(numberLabel);
         mainPanel.add(numberInputField);
         mainPanel.add(hexadecimalLabel);
-        /*
-         * mainPanel.add(triangleLabel);
-         * mainPanel.add(triangleQuantityField);
-         */
+        mainPanel.add(triangleLabel);
+        mainPanel.add(triangleQuantityField);
         mainPanel.add(finalLabel);
         mainPanel.add(writtenBy);
         mainPanel.add(copyButton);
@@ -313,8 +308,7 @@ public class Frame extends WindowAdapter implements ActionListener {
                 if (binaryString.length() > bitQuantity) {
                     throw new Exception("Girdiğiniz sayı üst sınırı aşıyor!");
                 }
-                // 1 A(Triangle) is added to the end of binary string
-                binary = binaryString.toString() + "A";
+                binary = binaryString.toString();
                 finalLabel.setText(binary);
                 errors[0] = false;
             } catch (Exception e) {
@@ -341,41 +335,37 @@ public class Frame extends WindowAdapter implements ActionListener {
         binary = resetBinary;
     }
 
-    /*
-     * Disabled
-     *
-     * void addTheTriangles() {
-     * if (!triangleQuantityField.getText().isEmpty()) {
-     * try {
-     * int quantityOfA = Integer.parseInt(triangleQuantityField.getText());
-     * StringBuilder A = new StringBuilder();
-     * if (quantityOfA >= 5) {
-     * throw new Exception("4 ten fazla rakam giremezsiniz!");
-     * }
-     * while (quantityOfA > 0 && quantityOfA < 5) {
-     * A.append("A");
-     * quantityOfA--;
-     * }
-     * finalLabel.setText(binary + A);
-     * errors[1] = false;
-     * } catch (Exception e) {
-     * error.setForeground(Color.RED);
-     * error.setText(e.getMessage());
-     * copyButton.setEnabled(false);
-     * errors[1] = true;
-     * resetValues();
-     * }
-     * } else {
-     * errors[1] = false;
-     * }
-     * 
-     * // if there is no any error
-     * if (!errors[0] && !errors[1]) {
-     * error.setText("");
-     * copyButton.setEnabled(true);
-     * }
-     * }
-     */
+    void addTheTriangles() {
+        if (!triangleQuantityField.getText().isEmpty()) {
+            try {
+                int quantityOfA = Integer.parseInt(triangleQuantityField.getText());
+                StringBuilder A = new StringBuilder();
+                if (quantityOfA >= 5) {
+                    throw new Exception("4 ten fazla rakam giremezsiniz!");
+                }
+                while (quantityOfA > 0 && quantityOfA < 5) {
+                    A.append("A");
+                    quantityOfA--;
+                }
+                finalLabel.setText(binary + A);
+                errors[1] = false;
+            } catch (Exception e) {
+                error.setForeground(Color.RED);
+                error.setText(e.getMessage());
+                copyButton.setEnabled(false);
+                errors[1] = true;
+                resetValues();
+            }
+        } else {
+            errors[1] = false;
+        }
+
+        // if there is no any error
+        if (!errors[0] && !errors[1]) {
+            error.setText("");
+            copyButton.setEnabled(true);
+        }
+    }
 
     void updateHistoryData() {
         String filePath = System.getProperty("user.home") + File.separator + "Documents" + File.separator
